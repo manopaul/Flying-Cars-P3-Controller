@@ -85,16 +85,14 @@ VehicleCommand QuadControl::GenerateMotorCommands(float collThrustCmd, V3F momen
     cmd.desiredThrustsN[2] = (t1 - t2 - t3 + t4)/4.0f; // rear left (f4)
     cmd.desiredThrustsN[3] = (-t1 - t2 + t3 + t4)/4.0f; // rear right (f3)
     
-   
+    cmd.desiredThrustsN[0] = CONSTRAIN(cmd.desiredThrustsN[0],minMotorThrust, maxMotorThrust);
+    cmd.desiredThrustsN[1] = CONSTRAIN(cmd.desiredThrustsN[1],minMotorThrust, maxMotorThrust);
+    cmd.desiredThrustsN[2] = CONSTRAIN(cmd.desiredThrustsN[2],minMotorThrust, maxMotorThrust);
+    cmd.desiredThrustsN[3] = CONSTRAIN(cmd.desiredThrustsN[3],minMotorThrust, maxMotorThrust);
+    
     /////////////////////////////// END STUDENT CODE ////////////////////////////
     
     /*
-     
-     cmd.desiredThrustsN[0] = CONSTRAIN(cmd.desiredThrustsN[0],minMotorThrust, maxMotorThrust);
-     cmd.desiredThrustsN[1] = CONSTRAIN(cmd.desiredThrustsN[1],minMotorThrust, maxMotorThrust);
-     cmd.desiredThrustsN[2] = CONSTRAIN(cmd.desiredThrustsN[2],minMotorThrust, maxMotorThrust);
-     cmd.desiredThrustsN[3] = CONSTRAIN(cmd.desiredThrustsN[3],minMotorThrust, maxMotorThrust);
-     
     cmd.desiredThrustsN[0] = mass * 9.81f / 4.f; // front left
     cmd.desiredThrustsN[1] = mass * 9.81f / 4.f; // front right
     cmd.desiredThrustsN[2] = mass * 9.81f / 4.f; // rear left
@@ -130,11 +128,12 @@ V3F QuadControl::BodyRateControl(V3F pqrCmd, V3F pqr)
     I.z = Izz;
     
     //I = V3F(Ixx,Iyy,Izz);
+    //momentCmd = I * kpPQR * ( pqrCmd - pqr );
+    
     err = pqrCmd - pqr; // target - actual
     uBar = kpPQR * err; // vertical acceleration
     momentCmd = uBar * I; // thrust command
     
-    //momentCmd = I * kpPQR * ( pqrCmd - pqr );
     
     /////////////////////////////// END STUDENT CODE ////////////////////////////
 
@@ -335,34 +334,7 @@ float QuadControl::YawControl(float yawCmd, float yaw)
     // HINTS:
     //  - use fmodf(foo,b) to unwrap a radian angle measure float foo to range [0,b].
     //  - use the yaw control gain parameter kpYaw
- /*
-    float yawRateCmd=0;
-    ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
-    
-    float yaw_err, yawCmd2PI;
-    
-    if (yawCmd > 0) {
-        yawCmd2PI = fmodf(yawCmd, 2 * F_PI);
-    } else {
-        yawCmd2PI = -fmodf(-yawCmd, 2 * F_PI);
-    }
-    yaw_err = yawCmd2PI - yaw;
-    
-    if (yaw_err > F_PI) {
-        yaw_err -= 2 * F_PI;
-    } else if (yaw_err < -F_PI) {
-        yaw_err += 2 * F_PI;
-    }
-    
-    yawRateCmd = kpYaw * yaw_err;
-    
-    /////////////////////////////// END STUDENT CODE ////////////////////////////
-
-    return yawRateCmd;
-    
-    */
-    
-    
+ 
     float yawRateCmd=0;
     ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
     
