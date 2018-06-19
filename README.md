@@ -110,8 +110,52 @@ Note, since the collective thrust command is in Newtons, it is converted to acce
 
 The `kpBank` parameter in `QuadControlParams.txt` is tuned to minimize settling time and to avoid too much overshoot.
 
+The code for the RollPitchControl() method is shown below
+```
+V3F pqrCmd;
+Mat3x3F R = attitude.RotationMatrix_IwrtB();
 
-If successful you should now see the quad level itself (as shown below), though it’ll still be flying away slowly since we’re not controlling velocity/position!  You should also see the vehicle angle (Roll) get controlled to 0.
+float R11 = R(0,0);
+float R12 = R(0,1);
+float R13 = R(0,2); // b_x_a actual
+
+float R21 = R(1,0);
+float R22 = R(1,1);
+float R23 = R(1,2); // b_y_a actual
+
+float R33 = R(2,2);
+
+pqrCmd.z = 0.0;
+
+if (collThrustCmd > 0.f) {
+    float c;
+    float b_x_target, b_x_err, b_dot_x_c;
+    float b_y_target, b_y_err, b_dot_y_c;
+    float p_c, q_c;
+
+    c = collThrustCmd / mass;
+
+    b_x_target = - CONSTRAIN(accelCmd.x / c, -maxTiltAngle, maxTiltAngle);
+    b_x_err = b_x_target - R13; //target - actual
+    b_dot_x_c = kpBank * b_x_err;
+
+    b_y_target =  - CONSTRAIN(accelCmd.y / c, -maxTiltAngle, maxTiltAngle);
+    b_y_err = b_y_target - R23; // target  - actual
+    b_dot_y_c = kpBank * b_y_err;
+
+    p_c = (R21 * b_dot_x_c - R11 * b_dot_y_c) / R33;
+    q_c = (R22 * b_dot_x_c - R12 * b_dot_y_c) / R33;
+
+    pqrCmd.x = p_c;
+    pqrCmd.y = q_c;
+} else {
+    pqrCmd.x = 0.0;
+    pqrCmd.y = 0.0;
+}
+
+return pqrCmd;
+```
+When successful, you will see the quad stabilize as shown below. 
 
 <p align="center">
 <img src="images/2_AltitudeControl.gif" width="500"/>
