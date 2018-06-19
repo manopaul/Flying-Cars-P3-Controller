@@ -174,8 +174,6 @@ The code for the `AltitudeControl()` method is shown below.
     float z_err, z_dot_err; // z_dot_err is velocity error
     float p_term, d_term, i_term;
     float b_z, u_bar_1, z_accel; //u_bar_1 is vertical acceleration target/desired & z_accel is vertical acceleration
-    
-    ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
     z_err = posZCmd - posZ;
     z_dot_err = velZCmd - velZ;
