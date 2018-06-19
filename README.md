@@ -59,25 +59,26 @@ In order to make the Quad fly the required trajectory, its body rate, roll and p
  - The `GenerateMotorCommands()` method was modified (lines XX) to compute the thrust force for each motor and the collective thrust. l is computed as the distance from the vehicle (quad) origin to the motor over the square root of two or 1.414213562373095. kappa value is the drag/thrust ratio. 
 Note that the force in z axis is inverted since D (down) in NED coordinates in pointing down. 
 Thrusts for each motor (t1 to t4) is the computed as shown below 
-
+```
     float t1 = momentCmd.x / l; // (L*(1.414213562373095/2));
     float t2 = momentCmd.y / l;  // (L*(1.414213562373095/2));
     float t3 =  - momentCmd.z/kappa;
     float t4 = collThrustCmd;
-
-Desired thrust is computed as follows
+```
+Desired thrust is computed as follows:
+```
     cmd.desiredThrustsN[0] = (t1 + t2 + t3 + t4)/4.0f; // front left (f1)
     cmd.desiredThrustsN[1] = (-t1 + t2 - t3 + t4)/4.0f; // front right (f2)
     cmd.desiredThrustsN[2] = (t1 - t2 - t3 + t4)/4.0f; // rear left (f4)
     cmd.desiredThrustsN[3] = (-t1 - t2 + t3 + t4)/4.0f; // rear right (f3)
-
+```
 Desired thrust is then constrained to be within the minumum and maximum allowed motor thrurst values set in the config file
+```
     cmd.desiredThrustsN[0] = CONSTRAIN(cmd.desiredThrustsN[0],minMotorThrust, maxMotorThrust);
     cmd.desiredThrustsN[1] = CONSTRAIN(cmd.desiredThrustsN[1],minMotorThrust, maxMotorThrust);
     cmd.desiredThrustsN[2] = CONSTRAIN(cmd.desiredThrustsN[2],minMotorThrust, maxMotorThrust);
     cmd.desiredThrustsN[3] = CONSTRAIN(cmd.desiredThrustsN[3],minMotorThrust, maxMotorThrust);
- 
-
+```
 
 Where all the F_1 to F_4 are the motor's thrust, tao(x,y,z) are the moments on each direction, F_t is the total thrust, kappa is the drag/thrust ratio and l is the drone arm length over square root of two. These equations come from the classroom lectures. There are a couple of things to consider. For example, on NED coordinates the z axis is inverted that is why the moment on z was inverted here. Another observation while implementing this is that F_3 and F_4 are switched, e.g. F_3 in the lectures is F_4 on the simulator and the same for F_4.
 
