@@ -1,22 +1,12 @@
 # Flying Cares - Project 3 - Implementing Controllers (Body Rate, Roll/Pitch, Position, Velocity, Yaw)   #
 
 For easy navigation throughout this document, here is an outline:
-
  - [Simulator, Code and Config](#simulator-code-and-config)
  - [The tasks](#the-tasks)
  - [Results](#results)
  - [Development environment setup](#development-environment-setup)
 
-
 ## Simulator, Code and Config ##
-
-Once you have the simulator running, you can observe the effects of the code changes in the simulator itself. In order to get the simulator up and running, your development environment will need to be set up. For instructions on how to set up your development environment, see the development environment setup portion of this README document. 
-
-#### The Code ####
-
-For this project, all the code was written in `src/QuadControl.cpp`. 
-
-All the configuration files for the controller and the vehicle are in the `config` directory.  Changes were made to the `QuadControlParams.txt` text file. Any changes to this file can be observed in real time and the effect is shown in the quad(s) in the simulator. 
 
 #### The Simulator ####
 
@@ -34,36 +24,36 @@ There are a handful of keyboard / mouse commands to help with the simulator itse
  - Space - pause simulation
 
 The simulation (including visualization) is implemented in a single thread.  This is so that you can safely breakpoint code at any point and debug, without affecting any part of the simulation. Due to deterministic timing and careful control over how the pseudo-random number generators are initialized and used, the simulation should be exactly repeatable. This means that any simulation with the same configuration should be exactly identical when run repeatedly or on different machines. Vehicles are created and graphs are reset whenever a scenario is loaded. When a scenario is reset (due to an end condition such as time or user pressing the ‘R’ key), the config files are all re-read and state of the simulation/vehicles/graphs is reset -- however the number/name of vehicles and displayed graphs are left untouched.
+Once you have the simulator running, you can observe the effects of the code changes in the simulator itself. In order to get the simulator up and running, your development environment will need to be set up. For instructions on how to set up your development environment, see the development environment setup portion of this README document. 
 
-### Testing it Out ###
+#### The Code ####
+
+For this project, all the code was written in `src/QuadControl.cpp`. 
+
+#### The Config ####
+
+All the configuration files for the controller and the vehicle are in the `config` directory.  Changes were made to the `QuadControlParams.txt` text file. Any changes to this file can be observed in real time and the effect is shown in the quad(s) in the simulator. 
+
+
+
+
+
+## The Tasks ##
+
+
+### Introduction - Hover (scenario 1) ###
 
 When you run the simulator, you'll notice your quad is falling straight down.  This is due to the fact that the thrusts are simply being set to:
 ```
 QuadControlParams.Mass * 9.81 / 4
 ```
-Therefore, if the mass doesn't match the actual mass of the quad, it'll fall down.  The `Mass` parameter in `QuadControlParams.txt` was tuned to make the vehicle more or less stay in the same spot.
+If the mass doesn't match the actual mass of the quad, it'll fall down.  The `Mass` parameter in `QuadControlParams.txt` was tuned to make the vehicle more or less stay in the same spot.
 
-Note: if you want to come back to this later, this scenario is "1_Intro".
-
-With the proper mass, your simulation should look a little like this:
+With the proper mass set, the quad hovered more or less in the same spot as shown below.
 
 <p align="center">
-<img src="images/scenario1.gif" width="500"/>
+<img src="images/1_Hover.gif" width="500"/>
 </p>
-
-
-## The Tasks ##
-
-For this project, you will be building a controller in C++.  You will be implementing and tuning this controller in several steps.
-
-You may find it helpful to consult the [Python controller code](https://github.com/udacity/FCND-Controls/blob/solution/controller.py) as a reference when you build out this controller in C++.
-
-#### Notes on Parameter Tuning
-1. **Comparison to Python**: Note that the vehicle you'll be controlling in this portion of the project has different parameters than the vehicle that's controlled by the Python code linked to above. **The tuning parameters that work for the Python controller will not work for this controller**
-
-2. **Parameter Ranges**: You can find the vehicle's control parameters in a file called `QuadControlParams.txt`. The default values for these parameters are all too small by a factor of somewhere between about 2X and 4X. So if a parameter has a starting value of 12, it will likely have a value somewhere between 24 and 48 once it's properly tuned.
-
-3. **Parameter Ratios**: In this [one-page document](https://www.overleaf.com/read/bgrkghpggnyc#/61023787/) you can find a derivation of the ratio of velocity proportional gain to position proportional gain for a critically damped double integrator system. The ratio of `kpV / kpP` should be 4.
 
 ### Body rate and roll/pitch control (scenario 2) ###
 
