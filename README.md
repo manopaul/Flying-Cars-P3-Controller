@@ -1,4 +1,4 @@
-# Flying Cares - Project 3 - Implementing Controllers (Body Rate, Roll/Pitch, Position, Velocity, Yaw)   #
+# Flying Cars - Project 3 - Implementing Controllers (Body Rate, Roll/Pitch, Position, Velocity, Yaw)   #
 
 For easy navigation throughout this document, here is an outline:
  - [Simulator, Code and Config](#simulator-code-and-config)
