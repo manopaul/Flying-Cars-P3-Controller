@@ -2,13 +2,13 @@
 
 For easy navigation throughout this document, here is an outline:
 
- - [Simulator](#simulator)
+ - [Simulator, Code and Config](#simulator-code-and-config)
  - [The tasks](#the-tasks)
  - [Results](#results)
  - [Development environment setup](#development-environment-setup)
 
 
-## Simulator ##
+## Simulator, Code and Config ##
 
 Once you have the simulator running, you can observe the effects of the code changes in the simulator itself. In order to get the simulator up and running, your development environment will need to be set up. For instructions on how to set up your development environment, see the development environment setup portion of this README document. 
 
@@ -17,9 +17,6 @@ Once you have the simulator running, you can observe the effects of the code cha
 For this project, all the code was written in `src/QuadControl.cpp`. 
 
 All the configuration files for the controller and the vehicle are in the `config` directory.  Changes were made to the `QuadControlParams.txt` text file. Any changes to this file can be observed in real time and the effect is shown in the quad(s) in the simulator. 
-
-You will also be using the simulator to fly some difference trajectories to test out the performance of your C++ implementation of your controller. These trajectories, along with supporting code, are found in the `traj` directory of the repo.
-
 
 ### The Simulator ###
 
