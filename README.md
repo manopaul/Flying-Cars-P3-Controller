@@ -101,7 +101,6 @@ The code shown below to compute desired moments are in (lines XX):
 
 Finally the gain parameter value (kpPQR) in the  `QuadControlParams.txt` is tuned so that the vehicle stops spinning quickly and does not overshoot. The rotation of the vehicle about the roll (omega.x) gets controlled to 0 and the other rates remain zero as well, however the quad will fly off, since the angle is not controlled back to 0 yet. 
 
-2. Implement roll / pitch control
 To prevent the vehicle from flying off, two of the three angles (roll and pitch) are coded to be controlled. The yaw angle is not controlled in this step. We get back to this later. 
 
 The `RollPitchControl()` method (lines XXX) calculates the desired pitch and roll angle rates based on global lateral acceleration, the attitude of the quad and the desired collective thrust of the quad. The code in this method is modified to apply a P controller to elements of the rotation matrix from the body and world frame accelerations. The output from this method is the desired pitch and roll rates in the X and Y axes. Since the quad control should not exert thrust downwards, the Z element is left at the default value of zero. 
@@ -171,11 +170,80 @@ To control the altitude, a PID controller was implemented in lines XXX in the `A
 
 The code for the `AltitudeControl()` method is shown below.
 
+```
+    float z_err, z_dot_err; // z_dot_err is velocity error
+    float p_term, d_term, i_term;
+    float b_z, u_bar_1, z_accel; //u_bar_1 is vertical acceleration target/desired & z_accel is vertical acceleration
+    
+    ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+
+    z_err = posZCmd - posZ;
+    z_dot_err = velZCmd - velZ;
+    integratedAltitudeError += z_err * dt;
+    
+    p_term = kpPosZ * z_err;
+    i_term = KiPosZ * integratedAltitudeError;
+    d_term = kpVelZ * z_dot_err;
+    //d_term = kpVelZ * z_dot_err + velZ;
+    
+    u_bar_1 = p_term + d_term + i_term + accelZCmd;
+    b_z = R(2,2);
+
+    z_accel = (u_bar_1 - CONST_GRAVITY) / b_z;
+    
+    thrust = - mass * CONSTRAIN(z_accel, -maxAscentRate/dt, maxAscentRate/dt);
+``` 
+
 To calculate the desired desired horizontal acceleration, a PD controller is implemented using the desired lateral position (posCmd), velocity (velCmd), acceleration and current pose (pos and vel) of the quad, in lines XXX in the `LateralPositionControl()` method. The maximum Speed and Acceleration is normalized and limited to the constraint values in the config file (maxSpeedXY and maxAccelXY).
 
 The code for the `LateralPositionControl()` method is shown below.
+``` 
+    float pos_x_err, pos_y_err;
+    float vel_x_err, vel_y_err;
+    float p_x, d_x, p_y, d_y; //PD controller variables
+    
+    pos_x_err = posCmd.x - pos.x; //posCmd[0] - pos[0];
+    pos_y_err = posCmd.y - pos.y; //posCmd[1] - pos[1];
+    
+    if(velCmd.mag() > maxSpeedXY) {
+        velCmd = velCmd.norm() * maxSpeedXY;
+    }
+    
+    vel_x_err = velCmd.x - vel.x;
+    vel_y_err = velCmd.y - vel.y;
+    
+    p_x = pos_x_err * kpPosXY;
+    p_y = pos_y_err * kpPosXY;
+    
+    d_x = vel_x_err * kpVelXY;
+    d_y = vel_y_err * kpVelXY;
+    
+    accelCmd.x = p_x + d_x + accelCmdFF.x;
+    accelCmd.y = p_y + d_y + accelCmdFF.y;
+    
+    if (accelCmd.mag() > maxAccelXY) {
+        accelCmd = accelCmd.norm() * maxAccelXY;
+    }
+    
+    accelCmd.z = 0;
+``` 
 
 Now the `YawControl()` method is modified to implemeted just a P controller, in lines XXX, as shown below to control the Yaw.
+```
+    float yaw_cmd_2_pi = 0;
+    if ( yawCmd > 0 ) {
+        yaw_cmd_2_pi = fmodf(yawCmd, 2 * F_PI);
+    } else {
+        yaw_cmd_2_pi = -fmodf(-yawCmd, 2 * F_PI);
+    }
+    float yaw_err = yaw_cmd_2_pi - yaw;
+    if ( yaw_err > F_PI ) {
+        yaw_err -= 2 * F_PI;
+    } if ( yaw_err < -F_PI ) {
+        yaw_err += 2 * F_PI;
+    }
+    yawRateCmd = kpYaw * yaw_err;
+```
 
 When successful, you should see the quad demonstrate the behavior shown below. 
 
@@ -208,30 +276,6 @@ Now that we have all the working parts of a controller, you will put it all toge
  - the other one is following `traj/FigureEightFF.txt` - for now this is the same trajectory.  For those interested in seeing how you might be able to improve the performance of your drone by adjusting how the trajectory is defined, check out **Extra Challenge 1** below!
 
 How well is your drone able to follow the trajectory?  It is able to hold to the path fairly well?
-
-
-### Extra Challenge 1 (Optional) ###
-
-You will notice that initially these two trajectories are the same. Let's work on improving some performance of the trajectory itself.
-
-1. Inspect the python script `traj/MakePeriodicTrajectory.py`.  Can you figure out a way to generate a trajectory that has velocity (not just position) information?
-
-2. Generate a new `FigureEightFF.txt` that has velocity terms
-Did the velocity-specified trajectory make a difference? Why?
-
-With the two different trajectories, your drones' motions should look like this:
-
-<p align="center">
-<img src="animations/scenario5.gif" width="500"/>
-</p>
-
-
-### Extra Challenge 2 (Optional) ###
-
-For flying a trajectory, is there a way to provide even more information for even better tracking?
-
-How about trying to fly this trajectory as quickly as possible (but within following threshold)!
-
 
 ## Results ##
 
