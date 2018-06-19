@@ -47,7 +47,7 @@ If the mass doesn't match the actual mass of the quad, it'll fall down.  The `Ma
 With the proper mass set, the quad hovered more or less in the same spot as shown below.
 
 <p align="center">
-<img src="images/1_Hover.gif" width="500"/>
+<img src="animations/1_Hover.gif" width="500"/>
 </p>
 
 ### Body rate and roll/pitch control (scenario 2) ###
@@ -157,7 +157,7 @@ The code for the RollPitchControl() method is shown below
 When successful, you will see the quad stabilize as shown below. 
 
 <p align="center">
-<img src="images/2_AltitudeControl.gif" width="500"/>
+<img src="animations/2_AltitudeControl.gif" width="500"/>
 </p>
 
 ### Position/velocity and yaw angle control (scenario 3) ###
@@ -251,19 +251,18 @@ When successful, you should see the quad demonstrate the behavior shown below.
 
 ### Non-idealities and robustness (scenario 4) ###
 
-In this part, we will explore some of the non-idealities and robustness of a controller.  For this simulation, we will use `Scenario 4`.  This is a configuration with 3 quads that are all are trying to move one meter forward.  However, this time, these quads are all a bit different:
+In this part, we explore some of the non-idealities and robustness of the implemented controller. For this simulation, use `Scenario 4`.  The configuration of the 3 quads in this scenario are all different as described below.
  - The green quad has its center of mass shifted back
  - The orange vehicle is an ideal quad
  - The red vehicle is heavier than usual
+The goal is to move all of these 3 quads one meter forward. 
 
-1. Run your controller & parameter set from Step 3.  Do all the quads seem to be moving OK?  If not, try to tweak the controller parameters to work for all 3 (tip: relax the controller).
+The integral control implemented and tuned in the 'AltitudeControl()' method was useful to stabilize and control the 3 quads with different masses. 
 
-2. Edit `AltitudeControl()` to add basic integral control to help with the different-mass vehicle.
-
-3. Tune the integral control, and other control parameters until all the quads successfully move properly.  Your drones' motion should look like this:
+Successfully the 3 quads were moved one meter forward as shown below.
 
 <p align="center">
-<img src="animations/scenario4.gif" width="500"/>
+<img src="animations/4_Nonidealities.gif" width="500"/>
 </p>
 
 
