@@ -1,92 +1,14 @@
-# The C++ Project Readme #
-
-This is the readme for the C++ project.
+# Flying Cares - Project 3 - Implementing Controllers (Body Rate, Roll/Pitch, Position, Velocity, Yaw)   #
 
 For easy navigation throughout this document, here is an outline:
 
- - [Development environment setup](#development-environment-setup)
- - [Simulator walkthrough](#simulator-walkthrough)
+ - [Simulator](#simulator)
  - [The tasks](#the-tasks)
- - [Evaluation](#evaluation)
+ - [Results](#results)
+ - [Development environment setup](#development-environment-setup)
 
 
-## Development Environment Setup ##
-
-Regardless of your development platform, the first step is to download or clone this repository.
-
-Once you have the code for the simulator, you will need to install the necessary compiler and IDE necessary for running the simulator.
-
-Here are the setup and install instructions for each of the recommended IDEs for each different OS options:
-
-### Windows ###
-
-For Windows, the recommended IDE is Visual Studio.  Here are the steps required for getting the project up and running using Visual Studio.
-
-1. Download and install [Visual Studio](https://www.visualstudio.com/vs/community/)
-2. Select *Open Project / Solution* and open `<simulator>/project/Simulator.sln`
-3. From the *Project* menu, select the *Retarget solution* option and select the Windows SDK that is installed on your computer (this should have been installed when installing Visual Studio or upon opening of the project).
-4. Make sure platform matches the flavor of Windows you are using (x86 or x64). The platform is visible next to the green play button in the Visual Studio toolbar:
-
-![x64](x64.png)
-
-5. To compile and run the project / simulator, simply click on the green play button at the top of the screen.  When you run the simulator, you should see a single quadcopter, falling down.
-
-
-### OS X ###
-
-For Mac OS X, the recommended IDE is XCode, which you can get via the App Store.
-
-1. Download and install XCode from the App Store if you don't already have it installed.
-2. Open the project from the `<simulator>/project` directory.
-3. After opening project, you need to set the working directory:
-  1. Go to *(Project Name)* | *Edit Scheme*
-  2. In new window, under *Run/Debug* on left side, under the *Options* tab, set Working Directory to `$PROJECT_DIR` and check ‘use custom working directory’.
-  3. Compile and run the project. You should see a single quadcopter, falling down.
-
-
-### Linux ###
-
-For Linux, the recommended IDE is QtCreator.
-
-1. Download and install QtCreator.
-2. Open the `.pro` file from the `<simulator>/project` directory.
-3. Compile and run the project (using the tab `Build` select the `qmake` option.  You should see a single quadcopter, falling down.
-
-**NOTE:** You may need to install the GLUT libs using `sudo apt-get install freeglut3-dev`
-
-
-### Advanced Versions ###
-
-These are some more advanced setup instructions for those of you who prefer to use a different IDE or build the code manually.  Note that these instructions do assume a certain level of familiarity with the approach and are not as detailed as the instructions above.
-
-#### CLion IDE ####
-
-For those of you who are using the CLion IDE for developement on your platform, we have included the necessary `CMakeLists.txt` file needed to build the simulation.
-
-#### CMake on Linux ####
-
-For those of you interested in doing manual builds using `cmake`, we have provided a `CMakeLists.txt` file with the necessary configuration.
-
-**NOTE: This has only been tested on Ubuntu 16.04, however, these instructions should work for most linux versions.  Also note that these instructions assume knowledge of `cmake` and the required `cmake` dependencies are installed.**
-
-1. Create a new directory for the build files:
-
-```sh
-cd FCND-Controls-CPP
-mkdir build
-```
-
-2. Navigate to the build directory and run `cmake` and then compile and build the code:
-
-```sh
-cd build
-cmake ..
-make
-```
-
-3. You should now be able to run the simulator with `./CPPSim` and you should see a single quadcopter, falling down.
-
-## Simulator Walkthrough ##
+## Simulator ##
 
 Now that you have all the code on your computer and the simulator running, let's walk through some of the elements of the code and the simulator itself.
 
@@ -265,7 +187,7 @@ For flying a trajectory, is there a way to provide even more information for eve
 How about trying to fly this trajectory as quickly as possible (but within following threshold)!
 
 
-## Evaluation ##
+## Results ##
 
 To assist with tuning of your controller, the simulator contains real time performance evaluation.  We have defined a set of performance metrics for each of the scenarios that your controllers must meet for a successful submission.
 
@@ -297,3 +219,80 @@ The specific performance metrics are as follows:
 ## Authors ##
 
 Thanks to Fotokite for the initial development of the project code and simulator.
+
+
+## Development Environment Setup ##
+
+Regardless of your development platform, the first step is to download or clone this repository.
+
+Once you have the code for the simulator, you will need to install the necessary compiler and IDE necessary for running the simulator.
+
+Here are the setup and install instructions for each of the recommended IDEs for each different OS options:
+
+### Windows ###
+
+For Windows, the recommended IDE is Visual Studio.  Here are the steps required for getting the project up and running using Visual Studio.
+
+1. Download and install [Visual Studio](https://www.visualstudio.com/vs/community/)
+2. Select *Open Project / Solution* and open `<simulator>/project/Simulator.sln`
+3. From the *Project* menu, select the *Retarget solution* option and select the Windows SDK that is installed on your computer (this should have been installed when installing Visual Studio or upon opening of the project).
+4. Make sure platform matches the flavor of Windows you are using (x86 or x64). The platform is visible next to the green play button in the Visual Studio toolbar:
+
+![x64](x64.png)
+
+5. To compile and run the project / simulator, simply click on the green play button at the top of the screen.  When you run the simulator, you should see a single quadcopter, falling down.
+
+
+### OS X ###
+
+For Mac OS X, the recommended IDE is XCode, which you can get via the App Store.
+
+1. Download and install XCode from the App Store if you don't already have it installed.
+2. Open the project from the `<simulator>/project` directory.
+3. After opening project, you need to set the working directory:
+  1. Go to *(Project Name)* | *Edit Scheme*
+  2. In new window, under *Run/Debug* on left side, under the *Options* tab, set Working Directory to `$PROJECT_DIR` and check ‘use custom working directory’.
+  3. Compile and run the project. You should see a single quadcopter, falling down.
+
+
+### Linux ###
+
+For Linux, the recommended IDE is QtCreator.
+
+1. Download and install QtCreator.
+2. Open the `.pro` file from the `<simulator>/project` directory.
+3. Compile and run the project (using the tab `Build` select the `qmake` option.  You should see a single quadcopter, falling down.
+
+**NOTE:** You may need to install the GLUT libs using `sudo apt-get install freeglut3-dev`
+
+
+### Advanced Versions ###
+
+These are some more advanced setup instructions for those of you who prefer to use a different IDE or build the code manually.  Note that these instructions do assume a certain level of familiarity with the approach and are not as detailed as the instructions above.
+
+#### CLion IDE ####
+
+For those of you who are using the CLion IDE for developement on your platform, we have included the necessary `CMakeLists.txt` file needed to build the simulation.
+
+#### CMake on Linux ####
+
+For those of you interested in doing manual builds using `cmake`, we have provided a `CMakeLists.txt` file with the necessary configuration.
+
+**NOTE: This has only been tested on Ubuntu 16.04, however, these instructions should work for most linux versions.  Also note that these instructions assume knowledge of `cmake` and the required `cmake` dependencies are installed.**
+
+1. Create a new directory for the build files:
+
+```sh
+cd FCND-Controls-CPP
+mkdir build
+```
+
+2. Navigate to the build directory and run `cmake` and then compile and build the code:
+
+```sh
+cd build
+cmake ..
+make
+```
+
+3. You should now be able to run the simulator with `./CPPSim` and you should see a single quadcopter, falling down.
