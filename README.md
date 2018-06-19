@@ -246,7 +246,7 @@ Now the `YawControl()` method is modified to implemeted just a P controller, in 
 When successful, you should see the quad demonstrate the behavior shown below. 
 
 <p align="center">
-<img src="images/3_PositionControl.gif" width="500"/>
+<img src="animations/3_PositionControl.gif" width="500"/>
 </p>
 
 ### Non-idealities and robustness (scenario 4) ###
@@ -268,11 +268,14 @@ Successfully the 3 quads were moved one meter forward as shown below.
 
 ### Tracking trajectories ###
 
-Now that we have all the working parts of a controller, you will put it all together and test it's performance once again on a trajectory.  For this simulation, you will use `Scenario 5`.  This scenario has two quadcopters:
+The final part is to test the performance of the quads to follow a trajectory. For this simulation, you will use `Scenario 5`. This scenario has two quadcopters:
  - the orange one is following `traj/FigureEight.txt`
- - the other one is following `traj/FigureEightFF.txt` - for now this is the same trajectory.  For those interested in seeing how you might be able to improve the performance of your drone by adjusting how the trajectory is defined, check out **Extra Challenge 1** below!
-
-How well is your drone able to follow the trajectory?  It is able to hold to the path fairly well?
+ - the other one is following `traj/FigureEightFF.txt` - for now this is the same trajectory.  
+ 
+The quads were able to successfully follow the trajectory as shown below. 
+<p align="center">
+<img src="animations/5_Trajectories.gif" width="500"/>
+</p>
 
 ## Results ##
 
