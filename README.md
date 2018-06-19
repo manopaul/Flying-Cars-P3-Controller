@@ -283,17 +283,9 @@ All of the scenarios passed successfully as shown in the images below.
 
 <p align="center">
 <img src="images/Pass-1_Hover.png" width="500"/>
-</p>
-<p align="center">
 <img src="images/Pass-2_AttitudeControl.png" width="500"/>
-</p>
-<p align="center">
 <img src="images/Pass-3_PositionControl.png" width="500"/>
-</p>
-<p align="center">
-<img src="images/Pass-4_Nonidealities.png" width="500"/>
-</p>
-<p align="center">
+[<img src="images/Pass-4_Nonidealities.png" width="500"/>
 <img src="images/Pass-5_Trajectories.png" width="500"/>
 </p>
 
@@ -317,7 +309,6 @@ For Windows, the recommended IDE is Visual Studio.  Here are the steps required 
 ![x64](x64.png)
 
 5. To compile and run the project / simulator, simply click on the green play button at the top of the screen.  When you run the simulator, you should see a single quadcopter, falling down.
-
 
 ### OS X ###
 
