@@ -281,7 +281,7 @@ The quads were able to successfully follow the trajectory as shown below.
 
 All of the scenarios passed successfully as shown in the images below.
 
-<p align="center">
+<p align="left">
 <img src="images/Pass-1_Hover.png" width="500"/>
 <img src="images/Pass-2_AttitudeControl.png" width="500"/>
 <img src="images/Pass-3_PositionControl.png" width="500"/>
