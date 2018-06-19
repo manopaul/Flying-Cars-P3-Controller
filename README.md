@@ -2,8 +2,8 @@
 
 For easy navigation throughout this document, here is an outline:
  - [Simulator, Code and Config](#simulator-code-and-config)
- - [The tasks](#the-tasks)
- - [Results](#results)
+ - [The scenarios](#the-scenarios)
+ - [Results](#results-and-performance-metrics)
  - [Development environment setup](#development-environment-setup)
 
 ## Simulator, Code and Config ##
@@ -34,7 +34,7 @@ For this project, all the code was written in `src/QuadControl.cpp`.
 
 All the configuration files for the controller and the vehicle are in the `config` directory.  Changes were made to the `QuadControlParams.txt` text file. Any changes to this file can be observed in real time and the effect is shown in the quad(s) in the simulator. 
 
-## The Tasks ##
+## The Scenarios ##
 
 ### Introduction - Hover (scenario 1) ###
 
