@@ -84,19 +84,19 @@ Once the motor thrust values were computed and constrained, the code in the func
 
 The code shown below to compute desired moments are in (lines XX):
 ```
-V3F momentCmd;
-V3F I, err, uBar;
-I.x = Ixx;
-I.y = Iyy;
-I.z = Izz;
-    
-//I = V3F(Ixx,Iyy,Izz);
-//momentCmd = I * kpPQR * ( pqrCmd - pqr );
-    
-err = pqrCmd - pqr; // target - actual
-uBar = kpPQR * err; // vertical acceleration
-momentCmd = uBar * I; // thrust command
-return momentCmd;
+    V3F momentCmd;
+    V3F I, err, uBar;
+    I.x = Ixx;
+    I.y = Iyy;
+    I.z = Izz;
+
+    //I = V3F(Ixx,Iyy,Izz);
+    //momentCmd = I * kpPQR * ( pqrCmd - pqr );
+
+    err = pqrCmd - pqr; // target - actual
+    uBar = kpPQR * err; // vertical acceleration
+    momentCmd = uBar * I; // thrust command
+    return momentCmd;
 ```
 
 Finally the gain parameter value (kpPQR) in the  `QuadControlParams.txt` is tuned so that the vehicle stops spinning quickly and does not overshoot. The rotation of the vehicle about the roll (omega.x) gets controlled to 0 and the other rates remain zero as well, however the quad will fly off, since the angle is not controlled back to 0 yet. 
@@ -112,55 +112,54 @@ The `kpBank` parameter in `QuadControlParams.txt` is tuned to minimize settling 
 
 The code for the RollPitchControl() method is shown below
 ```
-V3F pqrCmd;
-Mat3x3F R = attitude.RotationMatrix_IwrtB();
+    V3F pqrCmd;
+    Mat3x3F R = attitude.RotationMatrix_IwrtB();
 
-float R11 = R(0,0);
-float R12 = R(0,1);
-float R13 = R(0,2); // b_x_a actual
+    float R11 = R(0,0);
+    float R12 = R(0,1);
+    float R13 = R(0,2); // b_x_a actual
 
-float R21 = R(1,0);
-float R22 = R(1,1);
-float R23 = R(1,2); // b_y_a actual
+    float R21 = R(1,0);
+    float R22 = R(1,1);
+    float R23 = R(1,2); // b_y_a actual
 
-float R33 = R(2,2);
+    float R33 = R(2,2);
 
-pqrCmd.z = 0.0;
+    pqrCmd.z = 0.0;
 
-if (collThrustCmd > 0.f) {
-    float c;
-    float b_x_target, b_x_err, b_dot_x_c;
-    float b_y_target, b_y_err, b_dot_y_c;
-    float p_c, q_c;
+    if (collThrustCmd > 0.f) {
+        float c;
+        float b_x_target, b_x_err, b_dot_x_c;
+        float b_y_target, b_y_err, b_dot_y_c;
+        float p_c, q_c;
 
-    c = collThrustCmd / mass;
+        c = collThrustCmd / mass;
 
-    b_x_target = - CONSTRAIN(accelCmd.x / c, -maxTiltAngle, maxTiltAngle);
-    b_x_err = b_x_target - R13; //target - actual
-    b_dot_x_c = kpBank * b_x_err;
+        b_x_target = - CONSTRAIN(accelCmd.x / c, -maxTiltAngle, maxTiltAngle);
+        b_x_err = b_x_target - R13; //target - actual
+        b_dot_x_c = kpBank * b_x_err;
 
-    b_y_target =  - CONSTRAIN(accelCmd.y / c, -maxTiltAngle, maxTiltAngle);
-    b_y_err = b_y_target - R23; // target  - actual
-    b_dot_y_c = kpBank * b_y_err;
+        b_y_target =  - CONSTRAIN(accelCmd.y / c, -maxTiltAngle, maxTiltAngle);
+        b_y_err = b_y_target - R23; // target  - actual
+        b_dot_y_c = kpBank * b_y_err;
 
-    p_c = (R21 * b_dot_x_c - R11 * b_dot_y_c) / R33;
-    q_c = (R22 * b_dot_x_c - R12 * b_dot_y_c) / R33;
+        p_c = (R21 * b_dot_x_c - R11 * b_dot_y_c) / R33;
+        q_c = (R22 * b_dot_x_c - R12 * b_dot_y_c) / R33;
 
-    pqrCmd.x = p_c;
-    pqrCmd.y = q_c;
-} else {
-    pqrCmd.x = 0.0;
-    pqrCmd.y = 0.0;
-}
+        pqrCmd.x = p_c;
+        pqrCmd.y = q_c;
+    } else {
+        pqrCmd.x = 0.0;
+        pqrCmd.y = 0.0;
+    }
 
-return pqrCmd;
+    return pqrCmd;
 ```
 When successful, you will see the quad stabilize as shown below. 
 
 <p align="center">
 <img src="images/2_AltitudeControl.gif" width="500"/>
 </p>
-
 
 ### Position/velocity and yaw angle control (scenario 3) ###
 
