@@ -34,12 +34,7 @@ For this project, all the code was written in `src/QuadControl.cpp`.
 
 All the configuration files for the controller and the vehicle are in the `config` directory.  Changes were made to the `QuadControlParams.txt` text file. Any changes to this file can be observed in real time and the effect is shown in the quad(s) in the simulator. 
 
-
-
-
-
 ## The Tasks ##
-
 
 ### Introduction - Hover (scenario 1) ###
 
@@ -57,13 +52,57 @@ With the proper mass set, the quad hovered more or less in the same spot as show
 
 ### Body rate and roll/pitch control (scenario 2) ###
 
-First, you will implement the body rate and roll / pitch control.  For the simulation, you will use `Scenario 2`.  In this scenario, you will see a quad above the origin.  It is created with a small initial rotation speed about its roll axis.  Your controller will need to stabilize the rotational motion and bring the vehicle back to level attitude.
+In order to make the Quad fly the required trajectory, its body rate, roll and pitch has to be controlled. The rotational axis needs to be controlled so that the quad is stable and leveled in its attitude. 
 
-To accomplish this, you will:
+1. The body rate control was implemened as follows:
 
-1. Implement body rate control
+ - The `GenerateMotorCommands()` method was modified (lines XX) to compute the thrust force for each motor and the collective thrust. l is computed as the distance from the vehicle (quad) origin to the motor over the square root of two or 1.414213562373095. kappa value is the drag/thrust ratio. 
+Note that the force in z axis is inverted since D (down) in NED coordinates in pointing down. 
+Thrusts for each motor (t1 to t4) is the computed as shown below 
 
- - implement the code in the function `GenerateMotorCommands()`
+    float t1 = momentCmd.x / l; // (L*(1.414213562373095/2));
+    float t2 = momentCmd.y / l;  // (L*(1.414213562373095/2));
+    float t3 =  - momentCmd.z/kappa;
+    float t4 = collThrustCmd;
+
+Desired thrust is computed as follows
+    cmd.desiredThrustsN[0] = (t1 + t2 + t3 + t4)/4.0f; // front left (f1)
+    cmd.desiredThrustsN[1] = (-t1 + t2 - t3 + t4)/4.0f; // front right (f2)
+    cmd.desiredThrustsN[2] = (t1 - t2 - t3 + t4)/4.0f; // rear left (f4)
+    cmd.desiredThrustsN[3] = (-t1 - t2 + t3 + t4)/4.0f; // rear right (f3)
+
+Desired thrust is then constrained to be within the minumum and maximum allowed motor thrurst values set in the config file
+    cmd.desiredThrustsN[0] = CONSTRAIN(cmd.desiredThrustsN[0],minMotorThrust, maxMotorThrust);
+    cmd.desiredThrustsN[1] = CONSTRAIN(cmd.desiredThrustsN[1],minMotorThrust, maxMotorThrust);
+    cmd.desiredThrustsN[2] = CONSTRAIN(cmd.desiredThrustsN[2],minMotorThrust, maxMotorThrust);
+    cmd.desiredThrustsN[3] = CONSTRAIN(cmd.desiredThrustsN[3],minMotorThrust, maxMotorThrust);
+ 
+
+
+Where all the F_1 to F_4 are the motor's thrust, tao(x,y,z) are the moments on each direction, F_t is the total thrust, kappa is the drag/thrust ratio and l is the drone arm length over square root of two. These equations come from the classroom lectures. There are a couple of things to consider. For example, on NED coordinates the z axis is inverted that is why the moment on z was inverted here. Another observation while implementing this is that F_3 and F_4 are switched, e.g. F_3 in the lectures is F_4 on the simulator and the same for F_4.
+
+The second step is to implement the BodyRateControl method applying a P controller and the moments of inertia. At this point, the kpPQR parameter has to be tuned to stop the drone from flipping, but first, some thrust needs to be commanded in the altitude control because we don't have thrust commanded on the GenerateMotorCommands anymore. A good value is thurst = mass * CONST_GRAVITY.
+
+Once this is done, we move on to the RollPitchControl method. For this implementation, you need to apply a few equations. You need to apply a P controller to the elements R13 and R23 of the rotation matrix from body-frame accelerations and world frame accelerations:
+
+Roll and pitch P controller
+
+But the problem is you need to output roll and pitch rates; so, there is another equation to apply:
+
+From b to pq
+
+It is important to notice you received thrust and thrust it need to be inverted and converted to acceleration before applying the equations. After the implementation is done, start tuning kpBank and kpPQR(again? yes, and it is not the last time) until the drone flies more or less stable upward:
+
+C++ Scenario 2
+
+This video is cpp-scenario-2.mov
+
+When the scenario is passing the test, you should see this line on the standard output:
+
+PASS: ABS(Quad.Roll) was less than 0.025000 for at least 0.750000 seconds
+PASS: ABS(Quad.Omega.X) was less than 2.500000 for at least 0.750000 seconds
+ 
+ 
  - implement the code in the function `BodyRateControl()`
  - Tune `kpPQR` in `QuadControlParams.txt` to get the vehicle to stop spinning quickly but not overshoot
 
