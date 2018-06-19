@@ -56,7 +56,7 @@ In order to make the Quad fly the required trajectory, its body rate, roll and p
 
 The body rate control was implemened by making changes to the `GenerateMotorCommands()` , `BodyRateControl()`, in the QuadControl.cpp file in the src directory and tuning values in the QuadControlParams.txt file in the config directory.
 
-The `GenerateMotorCommands()` method was modified (lines XX) to compute the thrust force for each motor and the collective thrust. l is computed as the distance from the vehicle (quad) origin to the motor over the square root of two or 1.414213562373095. kappa value is the drag/thrust ratio. 
+The `GenerateMotorCommands()` method was modified ([line 56 to line 103](https://github.com/manopaul/Flying-Cars-P3-Controller/blob/master/src/QuadControl.cpp#L56) to compute the thrust force for each motor and the collective thrust. l is computed as the distance from the vehicle (quad) origin to the motor over the square root of two or 1.414213562373095. kappa value is the drag/thrust ratio. 
 Note that the force in z axis is inverted since D (down) in NED coordinates in pointing down. 
 Thrusts for each motor (t1 to t4) is the computed as shown below 
 ```
