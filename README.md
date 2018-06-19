@@ -12,28 +12,19 @@ For easy navigation throughout this document, here is an outline:
 
 Once you have the simulator running, you can observe the effects of the code changes in the simulator itself. In order to get the simulator up and running, your development environment will need to be set up. For instructions on how to set up your development environment, see the development environment setup portion of this README document. 
 
-### The Code ###
+#### The Code ####
 
 For this project, all the code was written in `src/QuadControl.cpp`. 
 
 All the configuration files for the controller and the vehicle are in the `config` directory.  Changes were made to the `QuadControlParams.txt` text file. Any changes to this file can be observed in real time and the effect is shown in the quad(s) in the simulator. 
 
-### The Simulator ###
+#### The Simulator ####
 
 In the simulator window itself, you can right click the window to select between a set of different scenarios that are designed to test the different parts of your controller.
 
-The simulation (including visualization) is implemented in a single thread.  This is so that you can safely breakpoint code at any point and debug, without affecting any part of the simulation.
-
-Due to deterministic timing and careful control over how the pseudo-random number generators are initialized and used, the simulation should be exactly repeatable. This means that any simulation with the same configuration should be exactly identical when run repeatedly or on different machines.
-
-Vehicles are created and graphs are reset whenever a scenario is loaded. When a scenario is reset (due to an end condition such as time or user pressing the ‘R’ key), the config files are all re-read and state of the simulation/vehicles/graphs is reset -- however the number/name of vehicles and displayed graphs are left untouched.
-
 When the simulation is running, you can use the arrow keys on your keyboard to impact forces on your drone to see how your controller reacts to outside forces being applied.
 
-#### Keyboard / Mouse Controls ####
-
 There are a handful of keyboard / mouse commands to help with the simulator itself, including applying external forces on your drone to see how your controllers reacts!
-
  - Left drag - rotate
  - X + left drag - pan
  - Z + left drag - zoom
@@ -42,25 +33,22 @@ There are a handful of keyboard / mouse commands to help with the simulator itse
  - R - reset simulation
  - Space - pause simulation
 
-
-
+The simulation (including visualization) is implemented in a single thread.  This is so that you can safely breakpoint code at any point and debug, without affecting any part of the simulation. Due to deterministic timing and careful control over how the pseudo-random number generators are initialized and used, the simulation should be exactly repeatable. This means that any simulation with the same configuration should be exactly identical when run repeatedly or on different machines. Vehicles are created and graphs are reset whenever a scenario is loaded. When a scenario is reset (due to an end condition such as time or user pressing the ‘R’ key), the config files are all re-read and state of the simulation/vehicles/graphs is reset -- however the number/name of vehicles and displayed graphs are left untouched.
 
 ### Testing it Out ###
 
 When you run the simulator, you'll notice your quad is falling straight down.  This is due to the fact that the thrusts are simply being set to:
-
 ```
 QuadControlParams.Mass * 9.81 / 4
 ```
-
-Therefore, if the mass doesn't match the actual mass of the quad, it'll fall down.  Take a moment to tune the `Mass` parameter in `QuadControlParams.txt` to make the vehicle more or less stay in the same spot.
+Therefore, if the mass doesn't match the actual mass of the quad, it'll fall down.  The `Mass` parameter in `QuadControlParams.txt` was tuned to make the vehicle more or less stay in the same spot.
 
 Note: if you want to come back to this later, this scenario is "1_Intro".
 
 With the proper mass, your simulation should look a little like this:
 
 <p align="center">
-<img src="animations/scenario1.gif" width="500"/>
+<img src="images/scenario1.gif" width="500"/>
 </p>
 
 
