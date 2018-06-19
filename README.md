@@ -1,13 +1,311 @@
-# The C++ Project Readme #
-
-This is the readme for the C++ project.
+# Flying Cars - Project 3 - Implementing Controllers (Body Rate, Roll/Pitch, Position, Velocity, Yaw)   #
 
 For easy navigation throughout this document, here is an outline:
-
- - [Development environment setup](#development-environment-setup)
- - [Simulator walkthrough](#simulator-walkthrough)
+ - [Simulator, Code and Config](#simulator-code-and-config)
  - [The tasks](#the-tasks)
- - [Evaluation](#evaluation)
+ - [Results](#results)
+ - [Development environment setup](#development-environment-setup)
+
+## Simulator, Code and Config ##
+
+#### The Simulator ####
+
+In the simulator window itself, you can right click the window to select between a set of different scenarios that are designed to test the different parts of your controller.
+
+When the simulation is running, you can use the arrow keys on your keyboard to impact forces on your drone to see how your controller reacts to outside forces being applied.
+
+There are a handful of keyboard / mouse commands to help with the simulator itself, including applying external forces on your drone to see how your controllers reacts!
+ - Left drag - rotate
+ - X + left drag - pan
+ - Z + left drag - zoom
+ - arrow keys - apply external force
+ - C - clear all graphs
+ - R - reset simulation
+ - Space - pause simulation
+
+The simulation (including visualization) is implemented in a single thread.  This is so that you can safely breakpoint code at any point and debug, without affecting any part of the simulation. Due to deterministic timing and careful control over how the pseudo-random number generators are initialized and used, the simulation should be exactly repeatable. This means that any simulation with the same configuration should be exactly identical when run repeatedly or on different machines. Vehicles are created and graphs are reset whenever a scenario is loaded. When a scenario is reset (due to an end condition such as time or user pressing the ‘R’ key), the config files are all re-read and state of the simulation/vehicles/graphs is reset -- however the number/name of vehicles and displayed graphs are left untouched.
+Once you have the simulator running, you can observe the effects of the code changes in the simulator itself. In order to get the simulator up and running, your development environment will need to be set up. For instructions on how to set up your development environment, see the development environment setup portion of this README document. 
+
+#### The Code ####
+
+For this project, all the code was written in `src/QuadControl.cpp`. 
+
+#### The Config ####
+
+All the configuration files for the controller and the vehicle are in the `config` directory.  Changes were made to the `QuadControlParams.txt` text file. Any changes to this file can be observed in real time and the effect is shown in the quad(s) in the simulator. 
+
+## The Tasks ##
+
+### Introduction - Hover (scenario 1) ###
+
+When you run the simulator, you'll notice your quad is falling straight down.  This is due to the fact that the thrusts are simply being set to:
+```
+QuadControlParams.Mass * 9.81 / 4
+```
+If the mass doesn't match the actual mass of the quad, it'll fall down.  The `Mass` parameter in `QuadControlParams.txt` was tuned to make the vehicle more or less stay in the same spot.
+
+With the proper mass set, the quad hovered more or less in the same spot as shown below.
+
+<p align="center">
+<img src="animations/1_Hover.gif" width="500"/>
+</p>
+
+### Body rate and roll/pitch control (scenario 2) ###
+
+In order to make the Quad fly the required trajectory, its body rate, roll and pitch has to be controlled. The rotational axis needs to be controlled so that the quad is stable and leveled in its attitude. 
+
+The body rate control was implemened by making changes to the `GenerateMotorCommands()` , `BodyRateControl()`, in the QuadControl.cpp file in the src directory and tuning values in the QuadControlParams.txt file in the config directory.
+
+The `GenerateMotorCommands()` method was modified (lines XX) to compute the thrust force for each motor and the collective thrust. l is computed as the distance from the vehicle (quad) origin to the motor over the square root of two or 1.414213562373095. kappa value is the drag/thrust ratio. 
+Note that the force in z axis is inverted since D (down) in NED coordinates in pointing down. 
+Thrusts for each motor (t1 to t4) is the computed as shown below 
+```
+    float t1 = momentCmd.x / l; // (L*(1.414213562373095/2));
+    float t2 = momentCmd.y / l;  // (L*(1.414213562373095/2));
+    float t3 =  - momentCmd.z/kappa;
+    float t4 = collThrustCmd;
+```
+Desired thrust is computed used the equations below. Note, the rear left and rear right motors are swapped in order.
+```
+    cmd.desiredThrustsN[0] = (t1 + t2 + t3 + t4)/4.0f; // front left (f1)
+    cmd.desiredThrustsN[1] = (-t1 + t2 - t3 + t4)/4.0f; // front right (f2)
+    cmd.desiredThrustsN[2] = (t1 - t2 - t3 + t4)/4.0f; // rear left (f4)
+    cmd.desiredThrustsN[3] = (-t1 - t2 + t3 + t4)/4.0f; // rear right (f3)
+```
+Desired thrust is then constrained to be within the minumum and maximum allowed motor thrurst values set in QuadControlParams text file [https://github.com/manopaul/Flying-Cars-P3-Controller/blob/master/config/QuadControlParams.txt] in the config directory. Minimum thrust is set to .1 and Maximum thrust is set to 4.5
+```
+    cmd.desiredThrustsN[0] = CONSTRAIN(cmd.desiredThrustsN[0],minMotorThrust, maxMotorThrust);
+    cmd.desiredThrustsN[1] = CONSTRAIN(cmd.desiredThrustsN[1],minMotorThrust, maxMotorThrust);
+    cmd.desiredThrustsN[2] = CONSTRAIN(cmd.desiredThrustsN[2],minMotorThrust, maxMotorThrust);
+    cmd.desiredThrustsN[3] = CONSTRAIN(cmd.desiredThrustsN[3],minMotorThrust, maxMotorThrust);
+```
+
+Once the motor thrust values were computed and constrained, the code in the function `BodyRateControl()` method was modified to implement a P controller that will output the desired moments for each of the 3 axes. It takes in the desired body rates (pqrCmd) and the current or estimated body rates (pqr) and computes the body rate error, which is then multiplied with the gain parameter (kpPQR) and moments of Inertia (I) to give us the desired moments along the x, y and z axes. 
+
+The code shown below to compute desired moments are in (lines XX):
+```
+    V3F momentCmd;
+    V3F I, err, uBar;
+    I.x = Ixx;
+    I.y = Iyy;
+    I.z = Izz;
+
+    //I = V3F(Ixx,Iyy,Izz);
+    //momentCmd = I * kpPQR * ( pqrCmd - pqr );
+
+    err = pqrCmd - pqr; // target - actual
+    uBar = kpPQR * err; // vertical acceleration
+    momentCmd = uBar * I; // thrust command
+    return momentCmd;
+```
+
+Finally the gain parameter value (kpPQR) in the  `QuadControlParams.txt` is tuned so that the vehicle stops spinning quickly and does not overshoot. The rotation of the vehicle about the roll (omega.x) gets controlled to 0 and the other rates remain zero as well, however the quad will fly off, since the angle is not controlled back to 0 yet. 
+
+To prevent the vehicle from flying off, two of the three angles (roll and pitch) are coded to be controlled. The yaw angle is not controlled in this step. We get back to this later. 
+
+The `RollPitchControl()` method (lines XXX) calculates the desired pitch and roll angle rates based on global lateral acceleration, the attitude of the quad and the desired collective thrust of the quad. The code in this method is modified to apply a P controller to elements of the rotation matrix from the body and world frame accelerations. The output from this method is the desired pitch and roll rates in the X and Y axes. Since the quad control should not exert thrust downwards, the Z element is left at the default value of zero. 
+
+Note, since the collective thrust command is in Newtons, it is converted to acceleration first and constrained to the maximum tilt angles.
+
+The `kpBank` parameter in `QuadControlParams.txt` is tuned to minimize settling time and to avoid too much overshoot.
+
+The code for the RollPitchControl() method is shown below
+```
+    V3F pqrCmd;
+    Mat3x3F R = attitude.RotationMatrix_IwrtB();
+
+    float R11 = R(0,0);
+    float R12 = R(0,1);
+    float R13 = R(0,2); // b_x_a actual
+
+    float R21 = R(1,0);
+    float R22 = R(1,1);
+    float R23 = R(1,2); // b_y_a actual
+
+    float R33 = R(2,2);
+
+    pqrCmd.z = 0.0;
+
+    if (collThrustCmd > 0.f) {
+        float c;
+        float b_x_target, b_x_err, b_dot_x_c;
+        float b_y_target, b_y_err, b_dot_y_c;
+        float p_c, q_c;
+
+        c = collThrustCmd / mass;
+
+        b_x_target = - CONSTRAIN(accelCmd.x / c, -maxTiltAngle, maxTiltAngle);
+        b_x_err = b_x_target - R13; //target - actual
+        b_dot_x_c = kpBank * b_x_err;
+
+        b_y_target =  - CONSTRAIN(accelCmd.y / c, -maxTiltAngle, maxTiltAngle);
+        b_y_err = b_y_target - R23; // target  - actual
+        b_dot_y_c = kpBank * b_y_err;
+
+        p_c = (R21 * b_dot_x_c - R11 * b_dot_y_c) / R33;
+        q_c = (R22 * b_dot_x_c - R12 * b_dot_y_c) / R33;
+
+        pqrCmd.x = p_c;
+        pqrCmd.y = q_c;
+    } else {
+        pqrCmd.x = 0.0;
+        pqrCmd.y = 0.0;
+    }
+
+    return pqrCmd;
+```
+When successful, you will see the quad stabilize as shown below. 
+
+<p align="center">
+<img src="animations/2_AltitudeControl.gif" width="500"/>
+</p>
+
+### Position/velocity and yaw angle control (scenario 3) ###
+
+In this part, the position, altitude and yaw are controlled for the quad. For the simulation, you will use `Scenario 3`.  This will create 2 identical quads, one offset from its target point (but initialized with yaw = 0) and second offset from target point but yaw = 45 degrees.
+
+Code is modified in the `AltitudeControl()`, `LateralPositionControl()` and `YawControl()` methods and the `kpPosZ` and `kpVelZ`, `kpVelXY`, `kpYaw` and the 3rd (z) component of the `kpPQR` parameters are tuned. 
+
+To control the altitude, a PID controller was implemented in lines XXX in the `AltitudeControl()` method, as shown below. Upon determining the velocity errors using the current (posZ, velZ) and desired (posZCmd, velZCmd) vertical position and velocity in NED , the p, i, and d terms were computed and the desired vertical acceleration was computed using these. Gravity and quad rotation was factored in and the the collective thrust is constrained to maxAscentRate and maxDescentRate as set in the config file. 
+
+The code for the `AltitudeControl()` method is shown below.
+
+```
+    float z_err, z_dot_err; // z_dot_err is velocity error
+    float p_term, d_term, i_term;
+    float b_z, u_bar_1, z_accel; //u_bar_1 is vertical acceleration target/desired & z_accel is vertical acceleration
+
+    z_err = posZCmd - posZ;
+    z_dot_err = velZCmd - velZ;
+    integratedAltitudeError += z_err * dt;
+    
+    p_term = kpPosZ * z_err;
+    i_term = KiPosZ * integratedAltitudeError;
+    d_term = kpVelZ * z_dot_err;
+    //d_term = kpVelZ * z_dot_err + velZ;
+    
+    u_bar_1 = p_term + d_term + i_term + accelZCmd;
+    b_z = R(2,2);
+
+    z_accel = (u_bar_1 - CONST_GRAVITY) / b_z;
+    
+    thrust = - mass * CONSTRAIN(z_accel, -maxAscentRate/dt, maxAscentRate/dt);
+``` 
+
+To calculate the desired desired horizontal acceleration, a PD controller is implemented using the desired lateral position (posCmd), velocity (velCmd), acceleration and current pose (pos and vel) of the quad, in lines XXX in the `LateralPositionControl()` method. The maximum Speed and Acceleration is normalized and limited to the constraint values in the config file (maxSpeedXY and maxAccelXY).
+
+The code for the `LateralPositionControl()` method is shown below.
+``` 
+    float pos_x_err, pos_y_err;
+    float vel_x_err, vel_y_err;
+    float p_x, d_x, p_y, d_y; //PD controller variables
+    
+    pos_x_err = posCmd.x - pos.x; //posCmd[0] - pos[0];
+    pos_y_err = posCmd.y - pos.y; //posCmd[1] - pos[1];
+    
+    if(velCmd.mag() > maxSpeedXY) {
+        velCmd = velCmd.norm() * maxSpeedXY;
+    }
+    
+    vel_x_err = velCmd.x - vel.x;
+    vel_y_err = velCmd.y - vel.y;
+    
+    p_x = pos_x_err * kpPosXY;
+    p_y = pos_y_err * kpPosXY;
+    
+    d_x = vel_x_err * kpVelXY;
+    d_y = vel_y_err * kpVelXY;
+    
+    accelCmd.x = p_x + d_x + accelCmdFF.x;
+    accelCmd.y = p_y + d_y + accelCmdFF.y;
+    
+    if (accelCmd.mag() > maxAccelXY) {
+        accelCmd = accelCmd.norm() * maxAccelXY;
+    }
+    
+    accelCmd.z = 0;
+``` 
+
+Now the `YawControl()` method is modified to implemeted just a P controller, in lines XXX, as shown below to control the Yaw.
+```
+    float yaw_cmd_2_pi = 0;
+    if ( yawCmd > 0 ) {
+        yaw_cmd_2_pi = fmodf(yawCmd, 2 * F_PI);
+    } else {
+        yaw_cmd_2_pi = -fmodf(-yawCmd, 2 * F_PI);
+    }
+    float yaw_err = yaw_cmd_2_pi - yaw;
+    if ( yaw_err > F_PI ) {
+        yaw_err -= 2 * F_PI;
+    } if ( yaw_err < -F_PI ) {
+        yaw_err += 2 * F_PI;
+    }
+    yawRateCmd = kpYaw * yaw_err;
+```
+
+When successful, you should see the quad demonstrate the behavior shown below. 
+
+<p align="center">
+<img src="images/3_PositionControl.gif" width="500"/>
+</p>
+
+### Non-idealities and robustness (scenario 4) ###
+
+In this part, we explore some of the non-idealities and robustness of the implemented controller. For this simulation, use `Scenario 4`.  The configuration of the 3 quads in this scenario are all different as described below.
+ - The green quad has its center of mass shifted back
+ - The orange vehicle is an ideal quad
+ - The red vehicle is heavier than usual
+The goal is to move all of these 3 quads one meter forward. 
+
+The integral control implemented and tuned in the 'AltitudeControl()' method was useful to stabilize and control the 3 quads with different masses. 
+
+Successfully the 3 quads were moved one meter forward as shown below.
+
+<p align="center">
+<img src="animations/4_Nonidealities.gif" width="500"/>
+</p>
+
+
+### Tracking trajectories ###
+
+Now that we have all the working parts of a controller, you will put it all together and test it's performance once again on a trajectory.  For this simulation, you will use `Scenario 5`.  This scenario has two quadcopters:
+ - the orange one is following `traj/FigureEight.txt`
+ - the other one is following `traj/FigureEightFF.txt` - for now this is the same trajectory.  For those interested in seeing how you might be able to improve the performance of your drone by adjusting how the trajectory is defined, check out **Extra Challenge 1** below!
+
+How well is your drone able to follow the trajectory?  It is able to hold to the path fairly well?
+
+## Results ##
+
+To assist with tuning of your controller, the simulator contains real time performance evaluation.  We have defined a set of performance metrics for each of the scenarios that your controllers must meet for a successful submission.
+
+There are two ways to view the output of the evaluation:
+
+ - in the command line, at the end of each simulation loop, a **PASS** or a **FAIL** for each metric being evaluated in that simulation
+ - on the plots, once your quad meets the metrics, you will see a green box appear on the plot notifying you of a **PASS**
+
+
+### Performance Metrics ###
+
+The specific performance metrics are as follows:
+
+ - scenario 2
+   - roll should less than 0.025 radian of nominal for 0.75 seconds (3/4 of the duration of the loop)
+   - roll rate should less than 2.5 radian/sec for 0.75 seconds
+
+ - scenario 3
+   - X position of both drones should be within 0.1 meters of the target for at least 1.25 seconds
+   - Quad2 yaw should be within 0.1 of the target for at least 1 second
+
+
+ - scenario 4
+   - position error for all 3 quads should be less than 0.1 meters for at least 1.5 seconds
+
+ - scenario 5
+   - position error of the quad should be less than 0.25 meters for at least 3 seconds
+
+## Authors ##
+
+Thanks to Fotokite for the initial development of the project code and simulator.
 
 
 ## Development Environment Setup ##
@@ -85,215 +383,3 @@ make
 ```
 
 3. You should now be able to run the simulator with `./CPPSim` and you should see a single quadcopter, falling down.
-
-## Simulator Walkthrough ##
-
-Now that you have all the code on your computer and the simulator running, let's walk through some of the elements of the code and the simulator itself.
-
-### The Code ###
-
-For the project, the majority of your code will be written in `src/QuadControl.cpp`.  This file contains all of the code for the controller that you will be developing.
-
-All the configuration files for your controller and the vehicle are in the `config` directory.  For example, for all your control gains and other desired tuning parameters, there is a config file called `QuadControlParams.txt` set up for you.  An import note is that while the simulator is running, you can edit this file in real time and see the affects your changes have on the quad!
-
-The syntax of the config files is as follows:
-
- - `[Quad]` begins a parameter namespace.  Any variable written afterwards becomes `Quad.<variablename>` in the source code.
- - If not in a namespace, you can also write `Quad.<variablename>` directly.
- - `[Quad1 : Quad]` means that the `Quad1` namespace is created with a copy of all the variables of `Quad`.  You can then overwrite those variables by specifying new values (e.g. `Quad1.Mass` to override the copied `Quad.Mass`).  This is convenient for having default values.
-
-You will also be using the simulator to fly some difference trajectories to test out the performance of your C++ implementation of your controller. These trajectories, along with supporting code, are found in the `traj` directory of the repo.
-
-
-### The Simulator ###
-
-In the simulator window itself, you can right click the window to select between a set of different scenarios that are designed to test the different parts of your controller.
-
-The simulation (including visualization) is implemented in a single thread.  This is so that you can safely breakpoint code at any point and debug, without affecting any part of the simulation.
-
-Due to deterministic timing and careful control over how the pseudo-random number generators are initialized and used, the simulation should be exactly repeatable. This means that any simulation with the same configuration should be exactly identical when run repeatedly or on different machines.
-
-Vehicles are created and graphs are reset whenever a scenario is loaded. When a scenario is reset (due to an end condition such as time or user pressing the ‘R’ key), the config files are all re-read and state of the simulation/vehicles/graphs is reset -- however the number/name of vehicles and displayed graphs are left untouched.
-
-When the simulation is running, you can use the arrow keys on your keyboard to impact forces on your drone to see how your controller reacts to outside forces being applied.
-
-#### Keyboard / Mouse Controls ####
-
-There are a handful of keyboard / mouse commands to help with the simulator itself, including applying external forces on your drone to see how your controllers reacts!
-
- - Left drag - rotate
- - X + left drag - pan
- - Z + left drag - zoom
- - arrow keys - apply external force
- - C - clear all graphs
- - R - reset simulation
- - Space - pause simulation
-
-
-
-
-### Testing it Out ###
-
-When you run the simulator, you'll notice your quad is falling straight down.  This is due to the fact that the thrusts are simply being set to:
-
-```
-QuadControlParams.Mass * 9.81 / 4
-```
-
-Therefore, if the mass doesn't match the actual mass of the quad, it'll fall down.  Take a moment to tune the `Mass` parameter in `QuadControlParams.txt` to make the vehicle more or less stay in the same spot.
-
-Note: if you want to come back to this later, this scenario is "1_Intro".
-
-With the proper mass, your simulation should look a little like this:
-
-<p align="center">
-<img src="animations/scenario1.gif" width="500"/>
-</p>
-
-
-## The Tasks ##
-
-For this project, you will be building a controller in C++.  You will be implementing and tuning this controller in several steps.
-
-You may find it helpful to consult the [Python controller code](https://github.com/udacity/FCND-Controls/blob/solution/controller.py) as a reference when you build out this controller in C++.
-
-#### Notes on Parameter Tuning
-1. **Comparison to Python**: Note that the vehicle you'll be controlling in this portion of the project has different parameters than the vehicle that's controlled by the Python code linked to above. **The tuning parameters that work for the Python controller will not work for this controller**
-
-2. **Parameter Ranges**: You can find the vehicle's control parameters in a file called `QuadControlParams.txt`. The default values for these parameters are all too small by a factor of somewhere between about 2X and 4X. So if a parameter has a starting value of 12, it will likely have a value somewhere between 24 and 48 once it's properly tuned.
-
-3. **Parameter Ratios**: In this [one-page document](https://www.overleaf.com/read/bgrkghpggnyc#/61023787/) you can find a derivation of the ratio of velocity proportional gain to position proportional gain for a critically damped double integrator system. The ratio of `kpV / kpP` should be 4.
-
-### Body rate and roll/pitch control (scenario 2) ###
-
-First, you will implement the body rate and roll / pitch control.  For the simulation, you will use `Scenario 2`.  In this scenario, you will see a quad above the origin.  It is created with a small initial rotation speed about its roll axis.  Your controller will need to stabilize the rotational motion and bring the vehicle back to level attitude.
-
-To accomplish this, you will:
-
-1. Implement body rate control
-
- - implement the code in the function `GenerateMotorCommands()`
- - implement the code in the function `BodyRateControl()`
- - Tune `kpPQR` in `QuadControlParams.txt` to get the vehicle to stop spinning quickly but not overshoot
-
-If successful, you should see the rotation of the vehicle about roll (omega.x) get controlled to 0 while other rates remain zero.  Note that the vehicle will keep flying off quite quickly, since the angle is not yet being controlled back to 0.  Also note that some overshoot will happen due to motor dynamics!.
-
-If you come back to this step after the next step, you can try tuning just the body rate omega (without the outside angle controller) by setting `QuadControlParams.kpBank = 0`.
-
-2. Implement roll / pitch control
-We won't be worrying about yaw just yet.
-
- - implement the code in the function `RollPitchControl()`
- - Tune `kpBank` in `QuadControlParams.txt` to minimize settling time but avoid too much overshoot
-
-If successful you should now see the quad level itself (as shown below), though it’ll still be flying away slowly since we’re not controlling velocity/position!  You should also see the vehicle angle (Roll) get controlled to 0.
-
-<p align="center">
-<img src="animations/scenario2.gif" width="500"/>
-</p>
-
-
-### Position/velocity and yaw angle control (scenario 3) ###
-
-Next, you will implement the position, altitude and yaw control for your quad.  For the simulation, you will use `Scenario 3`.  This will create 2 identical quads, one offset from its target point (but initialized with yaw = 0) and second offset from target point but yaw = 45 degrees.
-
- - implement the code in the function `LateralPositionControl()`
- - implement the code in the function `AltitudeControl()`
- - tune parameters `kpPosZ` and `kpPosZ`
- - tune parameters `kpVelXY` and `kpVelZ`
-
-If successful, the quads should be going to their destination points and tracking error should be going down (as shown below). However, one quad remains rotated in yaw.
-
- - implement the code in the function `YawControl()`
- - tune parameters `kpYaw` and the 3rd (z) component of `kpPQR`
-
-Tune position control for settling time. Don’t try to tune yaw control too tightly, as yaw control requires a lot of control authority from a quadcopter and can really affect other degrees of freedom.  This is why you often see quadcopters with tilted motors, better yaw authority!
-
-<p align="center">
-<img src="animations/scenario3.gif" width="500"/>
-</p>
-
-**Hint:**  For a second order system, such as the one for this quadcopter, the velocity gain (`kpVelXY` and `kpVelZ`) should be at least ~3-4 times greater than the respective position gain (`kpPosXY` and `kpPosZ`).
-
-### Non-idealities and robustness (scenario 4) ###
-
-In this part, we will explore some of the non-idealities and robustness of a controller.  For this simulation, we will use `Scenario 4`.  This is a configuration with 3 quads that are all are trying to move one meter forward.  However, this time, these quads are all a bit different:
- - The green quad has its center of mass shifted back
- - The orange vehicle is an ideal quad
- - The red vehicle is heavier than usual
-
-1. Run your controller & parameter set from Step 3.  Do all the quads seem to be moving OK?  If not, try to tweak the controller parameters to work for all 3 (tip: relax the controller).
-
-2. Edit `AltitudeControl()` to add basic integral control to help with the different-mass vehicle.
-
-3. Tune the integral control, and other control parameters until all the quads successfully move properly.  Your drones' motion should look like this:
-
-<p align="center">
-<img src="animations/scenario4.gif" width="500"/>
-</p>
-
-
-### Tracking trajectories ###
-
-Now that we have all the working parts of a controller, you will put it all together and test it's performance once again on a trajectory.  For this simulation, you will use `Scenario 5`.  This scenario has two quadcopters:
- - the orange one is following `traj/FigureEight.txt`
- - the other one is following `traj/FigureEightFF.txt` - for now this is the same trajectory.  For those interested in seeing how you might be able to improve the performance of your drone by adjusting how the trajectory is defined, check out **Extra Challenge 1** below!
-
-How well is your drone able to follow the trajectory?  It is able to hold to the path fairly well?
-
-
-### Extra Challenge 1 (Optional) ###
-
-You will notice that initially these two trajectories are the same. Let's work on improving some performance of the trajectory itself.
-
-1. Inspect the python script `traj/MakePeriodicTrajectory.py`.  Can you figure out a way to generate a trajectory that has velocity (not just position) information?
-
-2. Generate a new `FigureEightFF.txt` that has velocity terms
-Did the velocity-specified trajectory make a difference? Why?
-
-With the two different trajectories, your drones' motions should look like this:
-
-<p align="center">
-<img src="animations/scenario5.gif" width="500"/>
-</p>
-
-
-### Extra Challenge 2 (Optional) ###
-
-For flying a trajectory, is there a way to provide even more information for even better tracking?
-
-How about trying to fly this trajectory as quickly as possible (but within following threshold)!
-
-
-## Evaluation ##
-
-To assist with tuning of your controller, the simulator contains real time performance evaluation.  We have defined a set of performance metrics for each of the scenarios that your controllers must meet for a successful submission.
-
-There are two ways to view the output of the evaluation:
-
- - in the command line, at the end of each simulation loop, a **PASS** or a **FAIL** for each metric being evaluated in that simulation
- - on the plots, once your quad meets the metrics, you will see a green box appear on the plot notifying you of a **PASS**
-
-
-### Performance Metrics ###
-
-The specific performance metrics are as follows:
-
- - scenario 2
-   - roll should less than 0.025 radian of nominal for 0.75 seconds (3/4 of the duration of the loop)
-   - roll rate should less than 2.5 radian/sec for 0.75 seconds
-
- - scenario 3
-   - X position of both drones should be within 0.1 meters of the target for at least 1.25 seconds
-   - Quad2 yaw should be within 0.1 of the target for at least 1 second
-
-
- - scenario 4
-   - position error for all 3 quads should be less than 0.1 meters for at least 1.5 seconds
-
- - scenario 5
-   - position error of the quad should be less than 0.25 meters for at least 3 seconds
-
-## Authors ##
-
-Thanks to Fotokite for the initial development of the project code and simulator.
