@@ -163,25 +163,25 @@ When successful, you will see the quad stabilize as shown below.
 
 ### Position/velocity and yaw angle control (scenario 3) ###
 
-Next, you will implement the position, altitude and yaw control for your quad.  For the simulation, you will use `Scenario 3`.  This will create 2 identical quads, one offset from its target point (but initialized with yaw = 0) and second offset from target point but yaw = 45 degrees.
+In this part, the position, altitude and yaw are controlled for the quad. For the simulation, you will use `Scenario 3`.  This will create 2 identical quads, one offset from its target point (but initialized with yaw = 0) and second offset from target point but yaw = 45 degrees.
 
- - implement the code in the function `LateralPositionControl()`
- - implement the code in the function `AltitudeControl()`
- - tune parameters `kpPosZ` and `kpPosZ`
- - tune parameters `kpVelXY` and `kpVelZ`
+Code is modified in the `AltitudeControl()`, `LateralPositionControl()` and `YawControl()` methods and the `kpPosZ` and `kpVelZ`, `kpVelXY`, `kpYaw` and the 3rd (z) component of the `kpPQR` parameters are tuned. 
 
-If successful, the quads should be going to their destination points and tracking error should be going down (as shown below). However, one quad remains rotated in yaw.
+To control the altitude, a PID controller was implemented in lines XXX in the `AltitudeControl()` method, as shown below. Upon determining the velocity errors using the current (posZ, velZ) and desired (posZCmd, velZCmd) vertical position and velocity in NED , the p, i, and d terms were computed and the desired vertical acceleration was computed using these. Gravity and quad rotation was factored in and the the collective thrust is constrained to maxAscentRate and maxDescentRate as set in the config file. 
 
- - implement the code in the function `YawControl()`
- - tune parameters `kpYaw` and the 3rd (z) component of `kpPQR`
+The code for the `AltitudeControl()` method is shown below.
 
-Tune position control for settling time. Don’t try to tune yaw control too tightly, as yaw control requires a lot of control authority from a quadcopter and can really affect other degrees of freedom.  This is why you often see quadcopters with tilted motors, better yaw authority!
+To calculate the desired desired horizontal acceleration, a PD controller is implemented using the desired lateral position (posCmd), velocity (velCmd), acceleration and current pose (pos and vel) of the quad, in lines XXX in the `LateralPositionControl()` method. The maximum Speed and Acceleration is normalized and limited to the constraint values in the config file (maxSpeedXY and maxAccelXY).
+
+The code for the `LateralPositionControl()` method is shown below.
+
+Now the `YawControl()` method is modified to implemeted just a P controller, in lines XXX, as shown below to control the Yaw.
+
+When successful, you should see the quad demonstrate the behavior shown below. 
 
 <p align="center">
-<img src="animations/scenario3.gif" width="500"/>
+<img src="images/3_PositionControl.gif" width="500"/>
 </p>
-
-**Hint:**  For a second order system, such as the one for this quadcopter, the velocity gain (`kpVelXY` and `kpVelZ`) should be at least ~3-4 times greater than the respective position gain (`kpPosXY` and `kpPosZ`).
 
 ### Non-idealities and robustness (scenario 4) ###
 
