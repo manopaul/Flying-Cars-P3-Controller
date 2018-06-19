@@ -56,7 +56,7 @@ In order to make the Quad fly the required trajectory, its body rate, roll and p
 
 The body rate control was implemened by making changes to the `GenerateMotorCommands()` , `BodyRateControl()`, in the QuadControl.cpp file in the src directory and tuning values in the QuadControlParams.txt file in the config directory.
 
-The `GenerateMotorCommands()` method was modified in ([lines 56 to 103])(https://github.com/manopaul/Flying-Cars-P3-Controller/blob/master/src/QuadControl.cpp#L56) to compute the thrust force for each motor and the collective thrust. l is computed as the distance from the vehicle (quad) origin to the motor over the square root of two or 1.414213562373095. kappa value is the drag/thrust ratio. 
+The `GenerateMotorCommands()` method was modified in lines [56 - 103](https://github.com/manopaul/Flying-Cars-P3-Controller/blob/master/src/QuadControl.cpp#L56) to compute the thrust force for each motor and the collective thrust. l is computed as the distance from the vehicle (quad) origin to the motor over the square root of two or 1.414213562373095. kappa value is the drag/thrust ratio. 
 Note that the force in z axis is inverted since D (down) in NED coordinates in pointing down. 
 Thrusts for each motor (t1 to t4) is the computed as shown below 
 ```
@@ -72,7 +72,7 @@ Desired thrust is computed used the equations below. Note, the rear left and rea
     cmd.desiredThrustsN[2] = (t1 - t2 - t3 + t4)/4.0f; // rear left (f4)
     cmd.desiredThrustsN[3] = (-t1 - t2 + t3 + t4)/4.0f; // rear right (f3)
 ```
-Desired thrust is then constrained to be within the minumum and maximum allowed motor thrurst values set in QuadControlParams text file [https://github.com/manopaul/Flying-Cars-P3-Controller/blob/master/config/QuadControlParams.txt] in the config directory. Minimum thrust is set to .1 and Maximum thrust is set to 4.5
+Desired thrust is then constrained to be within the minumum and maximum allowed motor thrurst values set in [QuadControlParams](https://github.com/manopaul/Flying-Cars-P3-Controller/blob/master/config/QuadControlParams.txt) text file in the config directory. Minimum thrust is set to .1 and Maximum thrust is set to 4.5
 ```
     cmd.desiredThrustsN[0] = CONSTRAIN(cmd.desiredThrustsN[0],minMotorThrust, maxMotorThrust);
     cmd.desiredThrustsN[1] = CONSTRAIN(cmd.desiredThrustsN[1],minMotorThrust, maxMotorThrust);
@@ -82,7 +82,7 @@ Desired thrust is then constrained to be within the minumum and maximum allowed 
 
 Once the motor thrust values were computed and constrained, the code in the function `BodyRateControl()` method was modified to implement a P controller that will output the desired moments for each of the 3 axes. It takes in the desired body rates (pqrCmd) and the current or estimated body rates (pqr) and computes the body rate error, which is then multiplied with the gain parameter (kpPQR) and moments of Inertia (I) to give us the desired moments along the x, y and z axes. 
 
-The code shown below to compute desired moments are in (lines XX):
+The code shown below to compute desired moments are in lines [120-140](https://github.com/manopaul/Flying-Cars-P3-Controller/blob/master/src/QuadControl.cpp#L120):
 ```
     V3F momentCmd;
     V3F I, err, uBar;
@@ -103,7 +103,7 @@ Finally the gain parameter value (kpPQR) in the  `QuadControlParams.txt` is tune
 
 To prevent the vehicle from flying off, two of the three angles (roll and pitch) are coded to be controlled. The yaw angle is not controlled in this step. We get back to this later. 
 
-The `RollPitchControl()` method (lines XXX) calculates the desired pitch and roll angle rates based on global lateral acceleration, the attitude of the quad and the desired collective thrust of the quad. The code in this method is modified to apply a P controller to elements of the rotation matrix from the body and world frame accelerations. The output from this method is the desired pitch and roll rates in the X and Y axes. Since the quad control should not exert thrust downwards, the Z element is left at the default value of zero. 
+The `RollPitchControl()` method lines [163-208](https://github.com/manopaul/Flying-Cars-P3-Controller/blob/master/src/QuadControl.cpp#L163) calculates the desired pitch and roll angle rates based on global lateral acceleration, the attitude of the quad and the desired collective thrust of the quad. The code in this method is modified to apply a P controller to elements of the rotation matrix from the body and world frame accelerations. The output from this method is the desired pitch and roll rates in the X and Y axes. Since the quad control should not exert thrust downwards, the Z element is left at the default value of zero. 
 
 Note, since the collective thrust command is in Newtons, it is converted to acceleration first and constrained to the maximum tilt angles.
 
@@ -166,7 +166,7 @@ In this part, the position, altitude and yaw are controlled for the quad. For th
 
 Code is modified in the `AltitudeControl()`, `LateralPositionControl()` and `YawControl()` methods and the `kpPosZ` and `kpVelZ`, `kpVelXY`, `kpYaw` and the 3rd (z) component of the `kpPQR` parameters are tuned. 
 
-To control the altitude, a PID controller was implemented in lines XXX in the `AltitudeControl()` method, as shown below. Upon determining the velocity errors using the current (posZ, velZ) and desired (posZCmd, velZCmd) vertical position and velocity in NED , the p, i, and d terms were computed and the desired vertical acceleration was computed using these. Gravity and quad rotation was factored in and the the collective thrust is constrained to maxAscentRate and maxDescentRate as set in the config file. 
+To control the altitude, a PID controller was implemented in lines [231-258](https://github.com/manopaul/Flying-Cars-P3-Controller/blob/master/src/QuadControl.cpp#L231) in the `AltitudeControl()` method, as shown below. Upon determining the velocity errors using the current (posZ, velZ) and desired (posZCmd, velZCmd) vertical position and velocity in NED , the p, i, and d terms were computed and the desired vertical acceleration was computed using these. Gravity and quad rotation was factored in and the the collective thrust is constrained to maxAscentRate and maxDescentRate as set in the config file. 
 
 The code for the `AltitudeControl()` method is shown below.
 
@@ -192,7 +192,7 @@ The code for the `AltitudeControl()` method is shown below.
     thrust = - mass * CONSTRAIN(z_accel, -maxAscentRate/dt, maxAscentRate/dt);
 ``` 
 
-To calculate the desired desired horizontal acceleration, a PD controller is implemented using the desired lateral position (posCmd), velocity (velCmd), acceleration and current pose (pos and vel) of the quad, in lines XXX in the `LateralPositionControl()` method. The maximum Speed and Acceleration is normalized and limited to the constraint values in the config file (maxSpeedXY and maxAccelXY).
+To calculate the desired desired horizontal acceleration, a PD controller is implemented using the desired lateral position (posCmd), velocity (velCmd), acceleration and current pose (pos and vel) of the quad, in lines [281-322](https://github.com/manopaul/Flying-Cars-P3-Controller/blob/master/src/QuadControl.cpp#L281) in the `LateralPositionControl()` method. The maximum Speed and Acceleration is normalized and limited to the constraint values in the config file (maxSpeedXY and maxAccelXY).
 
 The code for the `LateralPositionControl()` method is shown below.
 ``` 
@@ -226,7 +226,7 @@ The code for the `LateralPositionControl()` method is shown below.
     accelCmd.z = 0;
 ``` 
 
-Now the `YawControl()` method is modified to implemeted just a P controller, in lines XXX, as shown below to control the Yaw.
+Now the `YawControl()` method is modified to implemeted just a P controller, in lines [338-356](https://github.com/manopaul/Flying-Cars-P3-Controller/blob/master/src/QuadControl.cpp#L338), as shown below to control the Yaw.
 ```
     float yaw_cmd_2_pi = 0;
     if ( yawCmd > 0 ) {
