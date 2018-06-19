@@ -277,39 +277,25 @@ The quads were able to successfully follow the trajectory as shown below.
 <img src="animations/5_Trajectories.gif" width="500"/>
 </p>
 
-## Results ##
+## Results and Performance Metrics ##
 
-To assist with tuning of your controller, the simulator contains real time performance evaluation.  We have defined a set of performance metrics for each of the scenarios that your controllers must meet for a successful submission.
+All of the scenarios passed successfully as shown in the images below.
 
-There are two ways to view the output of the evaluation:
-
- - in the command line, at the end of each simulation loop, a **PASS** or a **FAIL** for each metric being evaluated in that simulation
- - on the plots, once your quad meets the metrics, you will see a green box appear on the plot notifying you of a **PASS**
-
-
-### Performance Metrics ###
-
-The specific performance metrics are as follows:
-
- - scenario 2
-   - roll should less than 0.025 radian of nominal for 0.75 seconds (3/4 of the duration of the loop)
-   - roll rate should less than 2.5 radian/sec for 0.75 seconds
-
- - scenario 3
-   - X position of both drones should be within 0.1 meters of the target for at least 1.25 seconds
-   - Quad2 yaw should be within 0.1 of the target for at least 1 second
-
-
- - scenario 4
-   - position error for all 3 quads should be less than 0.1 meters for at least 1.5 seconds
-
- - scenario 5
-   - position error of the quad should be less than 0.25 meters for at least 3 seconds
-
-## Authors ##
-
-Thanks to Fotokite for the initial development of the project code and simulator.
-
+<p align="center">
+<img src="images/Pass-1_Hover.png" width="500"/>
+</p>
+<p align="center">
+<img src="images/Pass-2_AttitudeControl.png" width="500"/>
+</p>
+<p align="center">
+<img src="images/Pass-3_PositionControl.png" width="500"/>
+</p>
+<p align="center">
+<img src="images/Pass-4_Nonidealities.png" width="500"/>
+</p>
+<p align="center">
+<img src="images/Pass-5_Trajectories.png" width="500"/>
+</p>
 
 ## Development Environment Setup ##
 
