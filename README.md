@@ -54,7 +54,7 @@ With the proper mass set, the quad hovered more or less in the same spot as show
 
 In order to make the Quad fly the required trajectory, its body rate, roll and pitch has to be controlled. The rotational axis needs to be controlled so that the quad is stable and leveled in its attitude. 
 
-The body rate control was implemened by making changes to the GenerateMotorCommands(), BodyRateControl(), in the QuadControl.cpp file in the src directory and tuning values in the QuadControlParams.txt file in the config directory.
+The body rate control was implemened by making changes to the `GenerateMotorCommands()` , `BodyRateControl()`, in the QuadControl.cpp file in the src directory and tuning values in the QuadControlParams.txt file in the config directory.
 
 The `GenerateMotorCommands()` method was modified (lines XX) to compute the thrust force for each motor and the collective thrust. l is computed as the distance from the vehicle (quad) origin to the motor over the square root of two or 1.414213562373095. kappa value is the drag/thrust ratio. 
 Note that the force in z axis is inverted since D (down) in NED coordinates in pointing down. 
@@ -82,7 +82,7 @@ Desired thrust is then constrained to be within the minumum and maximum allowed 
 
 Once the motor thrust values were computed and constrained, the code in the function `BodyRateControl()` method was modified to implement a P controller that will output the desired moments for each of the 3 axes. It takes in the desired body rates (pqrCmd) and the current or estimated body rates (pqr) and computes the body rate error, which is then multiplied with the gain parameter (kpPQR) and moments of Inertia (I) to give us the desired moments along the x, y and z axes. 
 
-The code for this is shown below:
+The code shown below to compute desired moments are in (lines XX):
 ```
 V3F momentCmd;
 V3F I, err, uBar;
@@ -98,43 +98,23 @@ uBar = kpPQR * err; // vertical acceleration
 momentCmd = uBar * I; // thrust command
 return momentCmd;
 ```
-- Tune `kpPQR` in `QuadControlParams.txt` to get the vehicle to stop spinning quickly but not overshoot
 
-
-Once this is done, we move on to the RollPitchControl method. For this implementation, you need to apply a few equations. You need to apply a P controller to the elements R13 and R23 of the rotation matrix from body-frame accelerations and world frame accelerations:
-
-Roll and pitch P controller
-
-But the problem is you need to output roll and pitch rates; so, there is another equation to apply:
-
-From b to pq
-
-It is important to notice you received thrust and thrust it need to be inverted and converted to acceleration before applying the equations. After the implementation is done, start tuning kpBank and kpPQR(again? yes, and it is not the last time) until the drone flies more or less stable upward:
-
-C++ Scenario 2
-
-This video is cpp-scenario-2.mov
-
-When the scenario is passing the test, you should see this line on the standard output:
-
-PASS: ABS(Quad.Roll) was less than 0.025000 for at least 0.750000 seconds
-PASS: ABS(Quad.Omega.X) was less than 2.500000 for at least 0.750000 seconds
-
-
-If successful, you should see the rotation of the vehicle about roll (omega.x) get controlled to 0 while other rates remain zero.  Note that the vehicle will keep flying off quite quickly, since the angle is not yet being controlled back to 0.  Also note that some overshoot will happen due to motor dynamics!.
-
-If you come back to this step after the next step, you can try tuning just the body rate omega (without the outside angle controller) by setting `QuadControlParams.kpBank = 0`.
+Finally the gain parameter value (kpPQR) in the  `QuadControlParams.txt` is tuned so that the vehicle stops spinning quickly and does not overshoot. The rotation of the vehicle about the roll (omega.x) gets controlled to 0 and the other rates remain zero as well, however the quad will fly off, since the angle is not controlled back to 0 yet. 
 
 2. Implement roll / pitch control
-We won't be worrying about yaw just yet.
+To prevent the vehicle from flying off, two of the three angles (roll and pitch) are coded to be controlled. The yaw angle is not controlled in this step. We get back to this later. 
 
- - implement the code in the function `RollPitchControl()`
- - Tune `kpBank` in `QuadControlParams.txt` to minimize settling time but avoid too much overshoot
+The `RollPitchControl()` method (lines XXX) calculates the desired pitch and roll angle rates based on global lateral acceleration, the attitude of the quad and the desired collective thrust of the quad. The code in this method is modified to apply a P controller to elements of the rotation matrix from the body and world frame accelerations. The output from this method is the desired pitch and roll rates in the X and Y axes. Since the quad control should not exert thrust downwards, the Z element is left at the default value of zero. 
+
+Note, since the collective thrust command is in Newtons, it is converted to acceleration first and constrained to the maximum tilt angles.
+
+The `kpBank` parameter in `QuadControlParams.txt` is tuned to minimize settling time and to avoid too much overshoot.
+
 
 If successful you should now see the quad level itself (as shown below), though it’ll still be flying away slowly since we’re not controlling velocity/position!  You should also see the vehicle angle (Roll) get controlled to 0.
 
 <p align="center">
-<img src="animations/scenario2.gif" width="500"/>
+<img src="images/2_AltitudeControl.gif" width="500"/>
 </p>
 
 
